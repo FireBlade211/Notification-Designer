@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Notification Designer (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Notification Designer (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

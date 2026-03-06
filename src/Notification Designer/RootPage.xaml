@@ -1,0 +1,791 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Notification_Designer.RootPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Notification_Designer"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:converters="using:CommunityToolkit.WinUI.Converters"
+    xmlns:toasts="using:Microsoft.Toolkit.Uwp.Notifications"
+    xmlns:visuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
+    Loaded="Page_Loaded"
+    NavigationCacheMode="Required">
+
+    <Page.Resources>
+        <!--  These styles can be referenced to create a consistent SettingsPage layout  -->
+        <!--  Reference SettingsExpander Page in Windows Community Toolkit Gallery for the full sample  -->
+
+        <!--  Spacing between cards  -->
+        <x:Double x:Key="SettingsCardSpacing">4</x:Double>
+
+        <!--  Style (inc. the correct spacing) of a section header  -->
+        <Style
+            x:Key="SettingsSectionHeaderTextBlockStyle"
+            BasedOn="{StaticResource BodyStrongTextBlockStyle}"
+            TargetType="TextBlock">
+            <Style.Setters>
+                <Setter Property="Margin" Value="1,30,0,6" />
+            </Style.Setters>
+        </Style>
+
+        <converters:BoolNegationConverter x:Key="boolNegationConverter"/>
+        <local:FrameworkElementTagToBoolConverter x:Key="controlTagToBoolConverter"/>
+
+        <MenuFlyout Placement="BottomEdgeAlignedLeft" x:Key="AppMenuFlyout">
+            <MenuFlyoutItem Text="Settings" Icon="Setting" x:Name="settingsMenuItem" KeyboardAcceleratorTextOverride="Ctrl+,"
+                            Click="settingsMenuItem_Click">
+
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Control" x:Name="settingsAccel"/>
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
+            
+            <MenuFlyoutItem Text="Full-screen" Icon="FullScreen" x:Name="fullScreenButton" Click="fullScreenButton_Click">
+                <MenuFlyoutItem.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F11"/>
+                </MenuFlyoutItem.KeyboardAccelerators>
+            </MenuFlyoutItem>
+        </MenuFlyout>
+    </Page.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="titleBarGrid" SizeChanged="titleBarGrid_SizeChanged">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftPaddingColumn" Width="0"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="RightPaddingColumn" Width="0"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Style="{StaticResource SubtleButtonStyle}" x:Name="fallthroughButton" Grid.Column="1" ToolTipService.ToolTip="Menu"
+                    Flyout="{StaticResource AppMenuFlyout}">
+                <Image Width="16" Height="16" Source="/Assets/StoreLogo.png"/>
+            </Button>
+
+            <TextBlock Grid.Column="2" Text="Notification Designer" Style="{StaticResource CaptionTextBlockStyle}" Margin="6,8"/>
+        </Grid>
+
+        <Grid x:Name="RootGrid" Grid.Row="1">
+            <Button Style="{StaticResource SubtleButtonStyle}" x:Name="fullscreenMenuButton" ToolTipService.ToolTip="Menu"
+                    Flyout="{StaticResource AppMenuFlyout}" Visibility="Collapsed" VerticalAlignment="Top">
+
+                <!--<AnimatedIcon>
+                    <AnimatedIcon.Source>
+                        <visuals:AnimatedGlobalNavigationButtonVisualSource/>
+                    </AnimatedIcon.Source>
+
+                    <AnimatedIcon.FallbackIconSource>
+                        <SymbolIconSource Symbol="GlobalNavigationButton"/>
+                    </AnimatedIcon.FallbackIconSource>
+                </AnimatedIcon>-->
+
+                <Image Width="16" Height="16" Source="/Assets/StoreLogo.png"/>
+
+            </Button>
+
+            <ScrollViewer
+        x:Name="contentSV"
+        IsTabStop="False"
+        UseSystemFocusVisuals="False"
+        VerticalScrollBarVisibility="Auto"
+        VerticalScrollMode="Auto"
+                Grid.Row="1">
+                <StackPanel Spacing="{StaticResource SettingsCardSpacing}" Padding="36,0,36,0">
+                        <StackPanel.ChildrenTransitions>
+                            <TransitionCollection>
+                                <EntranceThemeTransition FromVerticalOffset="50" />
+                                <RepositionThemeTransition />
+                            </TransitionCollection>
+                        </StackPanel.ChildrenTransitions>
+
+                        <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Elements" />
+
+                        <toolkit:SettingsExpander Header="Text" Description="Add text elements" ItemsSource="{x:Bind TextElements, Mode=OneWay}">
+                            <toolkit:SettingsExpander.HeaderIcon>
+                                <FontIcon Glyph="&#xE8D2;" />
+                            </toolkit:SettingsExpander.HeaderIcon>
+
+                            <TextBlock Text="0 / 3" x:Name="MaxTextElementBlock" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                            <toolkit:SettingsExpander.ItemTemplate>
+                                <DataTemplate x:DataType="local:TextNotificationElement">
+                                    <toolkit:SettingsCard>
+                                        <toolkit:SettingsCard.HeaderIcon>
+                                            <FontIcon Glyph="&#xE8D2;" />
+                                        </toolkit:SettingsCard.HeaderIcon>
+
+                                        <toolkit:SettingsCard.Header>
+                                            <TextBox IsSpellCheckEnabled="True" AcceptsReturn="True" Text="{x:Bind Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="TextElementBox_TextChanged" LostFocus="TextElementBox_LostFocus"/>
+                                        </toolkit:SettingsCard.Header>
+
+                                        <AppBarButton Icon="Delete" Click="TextElementCardDeleteButton_Click" DataContext="{x:Bind}" ToolTipService.ToolTip="Delete element" LabelPosition="Collapsed"/>
+                                    </toolkit:SettingsCard>
+                                </DataTemplate>
+                            </toolkit:SettingsExpander.ItemTemplate>
+
+                            <toolkit:SettingsExpander.ItemsFooter>
+                                <toolkit:SettingsCard Header="Add new element" IsClickEnabled="True" HeaderIcon="Add" ActionIcon="Add" x:Name="AddTextElementCard" Click="AddTextElementCard_Click"/>
+                            </toolkit:SettingsExpander.ItemsFooter>
+                        </toolkit:SettingsExpander>
+
+                        <toolkit:SettingsExpander Header="Images" Description="Add a hero image, inline image, or app logo override">
+                            <toolkit:SettingsExpander.HeaderIcon>
+                                <FontIcon Glyph="&#xE8B9;" />
+                            </toolkit:SettingsExpander.HeaderIcon>
+
+                            <toolkit:SettingsExpander.Items>
+                                <toolkit:SettingsCard Header="Hero image URI">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBox x:Name="HeroURIBox" TextChanged="HeroURIBox_TextChanged"/>
+                                        <Button x:Name="HeroImageBrowseButton" Click="HeroImageBrowseButton_Click">
+                                            <Button.Content>
+                                                <SymbolIcon Symbol="Folder"/>
+                                            </Button.Content>
+                                        </Button>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="Inline image URI">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBox x:Name="InlineImgURIBox" TextChanged="InlineImgURIBox_TextChanged"/>
+                                        <Button x:Name="InlineImageBrowseButton" Click="InlineImageBrowseButton_Click">
+                                            <Button.Content>
+                                                <SymbolIcon Symbol="Folder"/>
+                                            </Button.Content>
+                                        </Button>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="App logo override URI">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBox x:Name="AppLogoOverrideURIBox" TextChanged="AppLogoOverrideURIBox_TextChanged"/>
+                                        <Button x:Name="AppLogoOverrideBrowseButton" Click="AppLogoOverrideBrowseButton_Click">
+                                            <Button.Content>
+                                                <SymbolIcon Symbol="Folder"/>
+                                            </Button.Content>
+                                        </Button>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="App logo override: Crop mode">
+                                    <RadioButtons x:Name="AppLogoOverrideCropModeButtons" MaxColumns="2">
+                                        <RadioButton Content="None" IsChecked="True" Tag="x"/>
+                                        <RadioButton Content="Circle" Tag="circle"/>
+                                    </RadioButtons>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="Inline image: Crop mode">
+                                    <RadioButtons x:Name="InlineImageCropModeButtons" MaxColumns="2">
+                                        <RadioButton Content="None" IsChecked="True" Tag="x"/>
+                                        <RadioButton Content="Circle" Tag="circle"/>
+                                    </RadioButtons>
+                                </toolkit:SettingsCard>
+                            </toolkit:SettingsExpander.Items>
+                        </toolkit:SettingsExpander>
+
+                        <toolkit:SettingsExpander Header="Attribution Text" Description="Set attribution text that shows up on the notification.">
+                            <toolkit:SettingsExpander.HeaderIcon>
+                                <FontIcon Glyph="&#xE8BA;" />
+                            </toolkit:SettingsExpander.HeaderIcon>
+
+                            <toolkit:SettingsExpander.Items>
+                                <toolkit:SettingsCard Header="Language" Description="Specify an IETF language tag">
+                                    <TextBox x:Name="AttribLanguageBox" PlaceholderText="e.g, en-US"/>
+                                </toolkit:SettingsCard>
+                            </toolkit:SettingsExpander.Items>
+
+                            <TextBox x:Name="AttributionBox" IsSpellCheckEnabled="True"/>
+                        </toolkit:SettingsExpander>
+
+                        <toolkit:SettingsExpander Header="Progress Bar" Description="Add a progress bar">
+                            <toolkit:SettingsExpander.HeaderIcon>
+                                <FontIcon Glyph="&#xF16A;" />
+                            </toolkit:SettingsExpander.HeaderIcon>
+
+                            <toolkit:SettingsExpander.Items>
+                                <toolkit:SettingsCard Header="Progress" IsEnabled="{x:Bind ProgressBarToggle.IsOn, Mode=OneWay}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}">
+                                <Run Text="{x:Bind ProgressBarPercentageSlider.Value, Mode=OneWay}"/><Run>%</Run>
+                                        </TextBlock>
+                                        <Slider Minimum="0" Maximum="100" x:Name="ProgressBarPercentageSlider"/>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="Title" IsEnabled="{x:Bind ProgressBarToggle.IsOn, Mode=OneWay}">
+                                    <TextBox x:Name="ProgressBarTitleBox" IsSpellCheckEnabled="True"/>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="Status" IsEnabled="{x:Bind ProgressBarToggle.IsOn, Mode=OneWay}">
+                                    <TextBox x:Name="ProgressBarStatusBox" IsSpellCheckEnabled="True"/>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="Percentage label override" IsEnabled="{x:Bind ProgressBarToggle.IsOn, Mode=OneWay}">
+                                    <TextBox x:Name="ProgressBarValueOverrideBox" IsSpellCheckEnabled="True"/>
+                                </toolkit:SettingsCard>
+                            </toolkit:SettingsExpander.Items>
+
+                            <ToggleSwitch x:Name="ProgressBarToggle"/>
+                        </toolkit:SettingsExpander>
+
+                        <toolkit:SettingsCard Header="Auto Snooze/Dismiss" Description="Automatically set up snooze/dismiss buttons, as well as a dropdown for duration. This cannot be comined with custom inputs.">
+                            <toolkit:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE708;" />
+                            </toolkit:SettingsCard.HeaderIcon>
+
+                            <ToggleSwitch x:Name="AutoSnoozeDismissToggle"/>
+                        </toolkit:SettingsCard>
+
+                        <toolkit:SettingsExpander Header="Buttons" HeaderIcon="Stop" Description="Add notification buttons." IsEnabled="{x:Bind AutoSnoozeDismissToggle.IsOn, Mode=OneWay, Converter={StaticResource boolNegationConverter}}">
+                            <toolkit:SettingsExpander.Items>
+                                <toolkit:SettingsCard Header="Button 1" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                    <StackPanel>
+                                        <toolkit:SettingsCard Header="Text">
+                                            <TextBox IsSpellCheckEnabled="True" PlaceholderText="Button text..." AcceptsReturn="True" x:Name="Button1TextBox"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Type">
+                                            <ComboBox x:Name="Button1TypeCombo">
+                                                <ComboBox.Items>
+                                                    <ComboBoxItem Content="Button" IsSelected="True" Tag="regular"/>
+                                                    <ComboBoxItem Content="Snooze Button" Tag="snooze"/>
+                                                    <ComboBoxItem Content="Dismiss Button" Tag="dismiss"/>
+                                                    <ComboBoxItem Content="Context menu button" Tag="context"/>
+                                                </ComboBox.Items>
+                                            </ComboBox>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Style">
+                                            <ComboBox x:Name="Button1StyleCombo">
+                                                <ComboBox.Items>
+                                                    <ComboBoxItem Content="Regular" IsSelected="True" Tag="regular"/>
+                                                    <ComboBoxItem Content="Success" Tag="success"/>
+                                                    <ComboBoxItem Content="Critical" Tag="crit"/>
+                                                </ComboBox.Items>
+                                            </ComboBox>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Tooltip">
+                                            <TextBox x:Name="Button1ToolTipBox"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Icon URI">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBox x:Name="Button1IconUriBox"/>
+                                                <Button x:Name="Button1IconBrowseButton" Click="Button1IconBrowseButton_Click">
+                                                    <Button.Content>
+                                                        <SymbolIcon Symbol="Folder"/>
+                                                    </Button.Content>
+                                                </Button>
+                                            </StackPanel>
+                                        </toolkit:SettingsCard>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="Button 2" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                    <StackPanel>
+                                        <toolkit:SettingsCard Header="Text">
+                                            <TextBox IsSpellCheckEnabled="True" PlaceholderText="Button text..." AcceptsReturn="True" x:Name="Button2TextBox"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Type">
+                                            <ComboBox x:Name="Button2TypeCombo">
+                                                <ComboBox.Items>
+                                                    <ComboBoxItem Content="Button" IsSelected="True" Tag="regular"/>
+                                                    <ComboBoxItem Content="Snooze Button" Tag="snooze"/>
+                                                    <ComboBoxItem Content="Dismiss Button" Tag="dismiss"/>
+                                                    <ComboBoxItem Content="Context menu button" Tag="context"/>
+                                                </ComboBox.Items>
+                                            </ComboBox>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Style">
+                                            <ComboBox x:Name="Button2StyleCombo">
+                                                <ComboBox.Items>
+                                                    <ComboBoxItem Content="Regular" IsSelected="True" Tag="regular"/>
+                                                    <ComboBoxItem Content="Success" Tag="success"/>
+                                                    <ComboBoxItem Content="Critical" Tag="crit"/>
+                                                </ComboBox.Items>
+                                            </ComboBox>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Tooltip">
+                                            <TextBox x:Name="Button2ToolTipBox"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Icon URI">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBox x:Name="Button2IconUriBox"/>
+                                                <Button x:Name="Button2IconBrowseButton" Click="Button2IconBrowseButton_Click">
+                                                    <Button.Content>
+                                                        <SymbolIcon Symbol="Folder"/>
+                                                    </Button.Content>
+                                                </Button>
+                                            </StackPanel>
+                                        </toolkit:SettingsCard>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="Button 3" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                    <StackPanel>
+                                        <toolkit:SettingsCard Header="Text">
+                                            <TextBox IsSpellCheckEnabled="True" PlaceholderText="Button text..." AcceptsReturn="True" x:Name="Button3TextBox"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Type">
+                                            <ComboBox x:Name="Button3TypeCombo">
+                                                <ComboBox.Items>
+                                                    <ComboBoxItem Content="Button" IsSelected="True" Tag="regular"/>
+                                                    <ComboBoxItem Content="Snooze Button" Tag="snooze"/>
+                                                    <ComboBoxItem Content="Dismiss Button" Tag="dismiss"/>
+                                                    <ComboBoxItem Content="Context menu button" Tag="context"/>
+                                                </ComboBox.Items>
+                                            </ComboBox>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Style">
+                                            <ComboBox x:Name="Button3StyleCombo">
+                                                <ComboBox.Items>
+                                                    <ComboBoxItem Content="Regular" IsSelected="True" Tag="regular"/>
+                                                    <ComboBoxItem Content="Success" Tag="success"/>
+                                                    <ComboBoxItem Content="Critical" Tag="crit"/>
+                                                </ComboBox.Items>
+                                            </ComboBox>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Tooltip">
+                                            <TextBox x:Name="Button3ToolTipBox"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Icon URI">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBox x:Name="Button3IconUriBox"/>
+                                                <Button x:Name="Button3IconBrowseButton" Click="Button3IconBrowseButton_Click">
+                                                    <Button.Content>
+                                                        <SymbolIcon Symbol="Folder"/>
+                                                    </Button.Content>
+                                                </Button>
+                                            </StackPanel>
+                                        </toolkit:SettingsCard>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="Button 4" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                    <StackPanel>
+                                        <toolkit:SettingsCard Header="Text">
+                                            <TextBox IsSpellCheckEnabled="True" PlaceholderText="Button text..." AcceptsReturn="True" x:Name="Button4TextBox"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Type">
+                                            <ComboBox x:Name="Button4TypeCombo">
+                                                <ComboBox.Items>
+                                                    <ComboBoxItem Content="Button" IsSelected="True" Tag="regular"/>
+                                                    <ComboBoxItem Content="Snooze Button" Tag="snooze"/>
+                                                    <ComboBoxItem Content="Dismiss Button" Tag="dismiss"/>
+                                                    <ComboBoxItem Content="Context menu button" Tag="context"/>
+                                                </ComboBox.Items>
+                                            </ComboBox>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Style">
+                                            <ComboBox x:Name="Button4StyleCombo">
+                                                <ComboBox.Items>
+                                                    <ComboBoxItem Content="Regular" IsSelected="True" Tag="regular"/>
+                                                    <ComboBoxItem Content="Success" Tag="success"/>
+                                                    <ComboBoxItem Content="Critical" Tag="crit"/>
+                                                </ComboBox.Items>
+                                            </ComboBox>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Tooltip">
+                                            <TextBox x:Name="Button4ToolTipBox"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Icon URI">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBox x:Name="Button4IconUriBox"/>
+                                                <Button x:Name="Button4IconBrowseButton" Click="Button4IconBrowseButton_Click">
+                                                    <Button.Content>
+                                                        <SymbolIcon Symbol="Folder"/>
+                                                    </Button.Content>
+                                                </Button>
+                                            </StackPanel>
+                                        </toolkit:SettingsCard>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+                                <toolkit:SettingsCard Header="Button 5" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                    <StackPanel>
+                                        <toolkit:SettingsCard Header="Text">
+                                            <TextBox IsSpellCheckEnabled="True" PlaceholderText="Button text..." AcceptsReturn="True" x:Name="Button5TextBox"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Type">
+                                            <ComboBox x:Name="Button5TypeCombo">
+                                                <ComboBox.Items>
+                                                    <ComboBoxItem Content="Button" IsSelected="True" Tag="regular"/>
+                                                    <ComboBoxItem Content="Snooze Button" Tag="snooze"/>
+                                                    <ComboBoxItem Content="Dismiss Button" Tag="dismiss"/>
+                                                    <ComboBoxItem Content="Context menu button" Tag="context"/>
+                                                </ComboBox.Items>
+                                            </ComboBox>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Style">
+                                            <ComboBox x:Name="Button5StyleCombo">
+                                                <ComboBox.Items>
+                                                    <ComboBoxItem Content="Regular" IsSelected="True" Tag="regular"/>
+                                                    <ComboBoxItem Content="Success" Tag="success"/>
+                                                    <ComboBoxItem Content="Critical" Tag="crit"/>
+                                                </ComboBox.Items>
+                                            </ComboBox>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Tooltip">
+                                            <TextBox x:Name="Button5ToolTipBox"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Icon URI">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBox x:Name="Button5IconUriBox"/>
+                                                <Button x:Name="Button5IconBrowseButton" Click="Button5IconBrowseButton_Click">
+                                                    <Button.Content>
+                                                        <SymbolIcon Symbol="Folder"/>
+                                                    </Button.Content>
+                                                </Button>
+                                            </StackPanel>
+                                        </toolkit:SettingsCard>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+                            </toolkit:SettingsExpander.Items>
+                        </toolkit:SettingsExpander>
+
+                        <toolkit:SettingsExpander Header="Input Boxes" Description="Add up to 5 text boxes to allow input" IsEnabled="{x:Bind AutoSnoozeDismissToggle.IsOn, Mode=OneWay, Converter={StaticResource boolNegationConverter}}">
+                            <toolkit:SettingsExpander.HeaderIcon>
+                                <FontIcon Glyph="&#xE8AC;" />
+                            </toolkit:SettingsExpander.HeaderIcon>
+
+                            <toolkit:SettingsExpander.Items>
+
+                                <toolkit:SettingsCard Header="Input Box 1" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                    <StackPanel>
+                                        <toolkit:SettingsCard Header="Enabled">
+                                            <ToggleSwitch x:Name="InputBox1Toggle"/>
+                                        </toolkit:SettingsCard>
+                                        <toolkit:SettingsCard Header="Title" IsEnabled="{x:Bind InputBox1Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input1TitleBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Placeholder text" IsEnabled="{x:Bind InputBox1Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input1PlaceholderBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Default text" IsEnabled="{x:Bind InputBox1Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input1DefaultBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="ID" IsEnabled="{x:Bind InputBox1Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input1IdBox"/>
+                                        </toolkit:SettingsCard>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+
+                                <toolkit:SettingsCard Header="Input Box 2" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                    <StackPanel>
+                                        <toolkit:SettingsCard Header="Enabled">
+                                            <ToggleSwitch x:Name="InputBox2Toggle"/>
+                                        </toolkit:SettingsCard>
+                                        <toolkit:SettingsCard Header="Title" IsEnabled="{x:Bind InputBox2Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input2TitleBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Placeholder text" IsEnabled="{x:Bind InputBox2Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input2PlaceholderBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Default text" IsEnabled="{x:Bind InputBox2Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input2DefaultBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="ID" IsEnabled="{x:Bind InputBox2Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input2IdBox"/>
+                                        </toolkit:SettingsCard>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+
+                                <toolkit:SettingsCard Header="Input Box 3" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                    <StackPanel>
+                                        <toolkit:SettingsCard Header="Enabled">
+                                            <ToggleSwitch x:Name="InputBox3Toggle"/>
+                                        </toolkit:SettingsCard>
+                                        <toolkit:SettingsCard Header="Title" IsEnabled="{x:Bind InputBox3Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input3TitleBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Placeholder text" IsEnabled="{x:Bind InputBox3Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input3PlaceholderBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Default text" IsEnabled="{x:Bind InputBox3Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input3DefaultBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="ID" IsEnabled="{x:Bind InputBox3Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input3IdBox"/>
+                                        </toolkit:SettingsCard>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+
+                                <toolkit:SettingsCard Header="Input Box 4" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                    <StackPanel>
+                                        <toolkit:SettingsCard Header="Enabled">
+                                            <ToggleSwitch x:Name="InputBox4Toggle"/>
+                                        </toolkit:SettingsCard>
+                                        <toolkit:SettingsCard Header="Title" IsEnabled="{x:Bind InputBox4Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input4TitleBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Placeholder text" IsEnabled="{x:Bind InputBox4Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input4PlaceholderBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Default text" IsEnabled="{x:Bind InputBox4Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input4DefaultBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="ID" IsEnabled="{x:Bind InputBox4Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input4IdBox"/>
+                                        </toolkit:SettingsCard>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+
+                                <toolkit:SettingsCard Header="Input Box 5" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                    <StackPanel>
+                                        <toolkit:SettingsCard Header="Enabled">
+                                            <ToggleSwitch x:Name="InputBox5Toggle"/>
+                                        </toolkit:SettingsCard>
+                                        <toolkit:SettingsCard Header="Title" IsEnabled="{x:Bind InputBox5Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input5TitleBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Placeholder text" IsEnabled="{x:Bind InputBox5Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input5PlaceholderBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="Default text" IsEnabled="{x:Bind InputBox5Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input5DefaultBox" IsSpellCheckEnabled="True"/>
+                                        </toolkit:SettingsCard>
+
+                                        <toolkit:SettingsCard Header="ID" IsEnabled="{x:Bind InputBox5Toggle.IsOn, Mode=OneWay}">
+                                            <TextBox x:Name="Input5IdBox"/>
+                                        </toolkit:SettingsCard>
+                                    </StackPanel>
+                                </toolkit:SettingsCard>
+
+                            </toolkit:SettingsExpander.Items>
+                        </toolkit:SettingsExpander>
+
+                        <toolkit:SettingsExpander Header="Combo Boxes" Description="Add combo boxes to let the user pick from a list of predefined items" ItemsSource="{x:Bind comboBoxes, Mode=TwoWay}" IsEnabled="{x:Bind AutoSnoozeDismissToggle.IsOn, Mode=OneWay, Converter={StaticResource boolNegationConverter}}">
+                            <toolkit:SettingsExpander.HeaderIcon>
+                                <FontIcon Glyph="&#xE8FD;" />
+                            </toolkit:SettingsExpander.HeaderIcon>
+                            <toolkit:SettingsExpander.ItemTemplate>
+                                <DataTemplate x:DataType="local:EditorToastComboBox">
+                                    <toolkit:SettingsCard Header="{x:Bind Name, Mode=OneWay}" ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                                        <StackPanel>
+                                            <toolkit:SettingsCard Header="Title">
+                                                <TextBox x:Name="TitleBox" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsSpellCheckEnabled="True"/>
+                                            </toolkit:SettingsCard>
+                                            <toolkit:SettingsCard Header="Default Item">
+                                                <ComboBox ItemsSource="{x:Bind Items, Mode=OneWay}" SelectedValue="{x:Bind DefaultItemId, Mode=TwoWay}" SelectedValuePath="Id"/>
+                                            </toolkit:SettingsCard>
+                                            <toolkit:SettingsCard Header="Items">
+                                                <Button Content="Edit" Style="{StaticResource AccentButtonStyle}">
+                                                    <Button.Flyout>
+                                                        <Flyout>
+                                                            <StackPanel Spacing="6">
+                                                                <Button Content="Add" DataContext="{x:Bind}" Click="ComboBoxCardItemAddButton_Click"/>
+                                                                <ListView x:Name="OuterCombo" ItemsSource="{x:Bind Items, Mode=TwoWay}" DataContext="{x:Bind}">
+                                                                    <ListView.ItemTemplate>
+                                                                        <DataTemplate x:DataType="local:EditorToastComboBoxItem">
+                                                                            <Grid ColumnSpacing="6" ColumnDefinitions="0.2*,*,Auto">
+                                                                                <TextBox Height="32" Text="{x:Bind Id, Mode=TwoWay}" PlaceholderText="ID..."/>
+                                                                                <TextBox Height="32" Grid.Column="1" Text="{x:Bind Content, Mode=TwoWay}" IsSpellCheckEnabled="True" PlaceholderText="Content..."/>
+                                                                                <AppBarButton Grid.Column="2" Icon="Delete" LabelPosition="Collapsed" ToolTipService.ToolTip="Delete" Tag="{x:Bind}" DataContext="{Binding DataContext, ElementName=OuterCombo}" Click="ComboBoxCardItemDeleteButton_Click"/>
+                                                                            </Grid>
+                                                                        </DataTemplate>
+                                                                    </ListView.ItemTemplate>
+                                                                </ListView>
+                                                            </StackPanel>
+                                                        </Flyout>
+                                                    </Button.Flyout>
+                                                </Button>
+                                            </toolkit:SettingsCard>
+
+                                            <toolkit:SettingsCard Header="Delete">
+                                                <Button DataContext="{x:Bind}"  Click="ComboBoxCardDeleteButton" Style="{StaticResource Color3DButtonStyle}" Background="Firebrick">
+                                                    <StackPanel Spacing="6" Orientation="Horizontal">
+                                                        <TextBlock Text="Delete"/>
+                                                        <SymbolIcon Symbol="Delete"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </toolkit:SettingsCard>
+                                        </StackPanel>
+                                    </toolkit:SettingsCard>
+                                </DataTemplate>
+                            </toolkit:SettingsExpander.ItemTemplate>
+                            <AppBarButton x:Name="AddComboBoxButton" Label="Add 0 / 5" Icon="Add" Click="AddComboBoxButton_Click"/>
+                        </toolkit:SettingsExpander>
+
+                        <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Properties" />
+
+                        <toolkit:SettingsCard Header="Scenario" Description="Set a scenario to adjust how the system behaves with the notification">
+                            <toolkit:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE814;" />
+                            </toolkit:SettingsCard.HeaderIcon>
+
+                            <ComboBox x:Name="ScenarioCombo">
+                                <ComboBox.Items>
+                                    <ComboBoxItem Content="Default" Tag="Default" IsSelected="True"/>
+                                    <ComboBoxItem Content="Reminder" Tag="Reminder"/>
+                                    <ComboBoxItem Content="Alarm" Tag="Alarm"/>
+                                    <ComboBoxItem Content="Incoming Call" Tag="IncomingCall"/>
+                                </ComboBox.Items>
+                            </ComboBox>
+                        </toolkit:SettingsCard>
+
+                        <toolkit:SettingsCard Header="Sound" Description="Set a sound event">
+                            <toolkit:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xEC4F;" />
+                            </toolkit:SettingsCard.HeaderIcon>
+
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <ToggleSwitch x:Name="SoundLoopToggle" OffContent="Loop" OnContent="Loop"/>
+
+                                <ComboBox x:Name="SoundEventCombo">
+                                    <ComboBox.Items>
+                                        <ComboBoxItem Content="None" Tag="None" IsSelected="True"/>
+                                        <ComboBoxItem Content="Default" Tag="Default"/>
+                                        <ComboBoxItem Content="Instant Message (IM)" Tag="IM"/>
+                                        <ComboBoxItem Content="Mail" Tag="Mail"/>
+                                        <ComboBoxItem Content="Reminder" Tag="Reminder"/>
+                                        <ComboBoxItem Content="SMS" Tag="SMS"/>
+                                        <ComboBoxItem Content="Alarm 1" Tag="Alarm"/>
+                                        <ComboBoxItem Content="Alarm 2" Tag="Alarm2"/>
+                                        <ComboBoxItem Content="Alarm 3" Tag="Alarm3"/>
+                                        <ComboBoxItem Content="Alarm 4" Tag="Alarm4"/>
+                                        <ComboBoxItem Content="Alarm 5" Tag="Alarm5"/>
+                                        <ComboBoxItem Content="Alarm 6" Tag="Alarm6"/>
+                                        <ComboBoxItem Content="Alarm 7" Tag="Alarm7"/>
+                                        <ComboBoxItem Content="Alarm 8" Tag="Alarm8"/>
+                                        <ComboBoxItem Content="Alarm 9" Tag="Alarm9"/>
+                                        <ComboBoxItem Content="Alarm 10" Tag="Alarm10"/>
+                                        <ComboBoxItem Content="Incoming Call 1" Tag="Call"/>
+                                        <ComboBoxItem Content="Incoming Call 2" Tag="Call2"/>
+                                        <ComboBoxItem Content="Incoming Call 3" Tag="Call3"/>
+                                        <ComboBoxItem Content="Incoming Call 4" Tag="Call4"/>
+                                        <ComboBoxItem Content="Incoming Call 5" Tag="Call5"/>
+                                        <ComboBoxItem Content="Incoming Call 6" Tag="Call6"/>
+                                        <ComboBoxItem Content="Incoming Call 7" Tag="Call7"/>
+                                        <ComboBoxItem Content="Incoming Call 8" Tag="Call8"/>
+                                        <ComboBoxItem Content="Incoming Call 9" Tag="Call9"/>
+                                        <ComboBoxItem Content="Incoming Call 10" Tag="Call10"/>
+                                    </ComboBox.Items>
+                                </ComboBox>
+                            </StackPanel>
+
+                        </toolkit:SettingsCard>
+
+                        <toolkit:SettingsCard Header="Timestamp" Description="Override the system-provided notification timestamp">
+                            <toolkit:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE787;" />
+                            </toolkit:SettingsCard.HeaderIcon>
+
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <ToggleSwitch x:Name="TimestampOverrideToggle" OffContent="Override" OnContent="Override"/>
+                                <CalendarDatePicker x:Name="TimestampOverrideDatePicker" IsEnabled="{x:Bind TimestampOverrideToggle.IsOn, Mode=OneWay}"/>
+                                <TimePicker x:Name="TimestampOverrideTimePicker" IsEnabled="{x:Bind TimestampOverrideToggle.IsOn, Mode=OneWay}"/>
+                            </StackPanel>
+                        </toolkit:SettingsCard>
+
+                        <toolkit:SettingsExpander Header="Notification Header" Description="Set the notification header this notification appears under">
+                            <toolkit:SettingsExpander.HeaderIcon>
+                                <FontIcon Glyph="&#xECAF;" />
+                            </toolkit:SettingsExpander.HeaderIcon>
+
+                            <ToggleSwitch x:Name="HeaderEnabledSwitch"/>
+
+                            <toolkit:SettingsExpander.Items>
+                                <toolkit:SettingsCard Header="ID" IsEnabled="{x:Bind HeaderEnabledSwitch.IsOn, Mode=OneWay}">
+                                    <TextBox x:Name="HeaderIdBox"/>
+                                </toolkit:SettingsCard>
+
+                                <toolkit:SettingsCard Header="Title" IsEnabled="{x:Bind HeaderEnabledSwitch.IsOn, Mode=OneWay}">
+                                    <TextBox x:Name="HeaderTitleBox" IsSpellCheckEnabled="True"/>
+                                </toolkit:SettingsCard>
+
+                                <toolkit:SettingsCard Header="Arguments" IsEnabled="{x:Bind HeaderEnabledSwitch.IsOn, Mode=OneWay}">
+                                    <TextBox x:Name="HeaderArgsBox"/>
+                                </toolkit:SettingsCard>
+                            </toolkit:SettingsExpander.Items>
+                        </toolkit:SettingsExpander>
+
+                        <toolkit:SettingsCard Header="Arguments" Description="Set arguments to launch the app with when the notification is clicked">
+                            <toolkit:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE943;" />
+                            </toolkit:SettingsCard.HeaderIcon>
+
+                            <TextBox x:Name="ArgsBox"/>
+                        </toolkit:SettingsCard>
+
+                        <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Build and show" />
+
+                        <toolkit:SettingsCard IsClickEnabled="True" Header="Build notification" HeaderIcon="Repair" x:Name="BuildShowNotifyCard" Click="BuildShowNotifyCard_Click"/>
+
+                        <toolkit:SettingsCard IsClickEnabled="True" Header="Show notification" x:Name="ShowNotifyCard" IsEnabled="False" Click="ShowNotifyCard_Click">
+                            <toolkit:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE7E7;" />
+                            </toolkit:SettingsCard.HeaderIcon>
+                        </toolkit:SettingsCard>
+
+                        <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="XML" />
+
+                        <toolkit:SettingsCard Header="XML Data" Description="View the XML data for the notification" ContentAlignment="Vertical" HorizontalContentAlignment="Left">
+                            <toolkit:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE943;" />
+                            </toolkit:SettingsCard.HeaderIcon>
+
+                            <RichEditBox MinWidth="400" IsReadOnly="True" Background="Black" FontFamily="Consolas" x:Name="XmlPresenter" HorizontalAlignment="Stretch"
+                                         RequestedTheme="Dark">
+                                <RichEditBox.Resources>
+                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Black"/>
+                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Black"/>
+                                </RichEditBox.Resources>
+                            </RichEditBox>
+                        </toolkit:SettingsCard>
+
+                        <!--<toolkit:SettingsCard Header="Export XML" Click="ExportXmlCard_Click" x:Name="ExportXmlCard" IsEnabled="False" IsClickEnabled="True">
+                <toolkit:SettingsCard.Description>
+                    <RichTextBlock>
+                        <Paragraph>
+                            <Run Text="Export the XML data for the notification. " />
+                            <Hyperlink NavigateUri="https://learn.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/adaptive-interactive-toasts?tabs=xml#app-notification-structure">
+                                This is not a custom format, but the official Windows app notification XML format.
+                            </Hyperlink>
+                        </Paragraph>
+                    </RichTextBlock>
+                </toolkit:SettingsCard.Description>
+
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xEDE1;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>
+
+            <toolkit:SettingsCard Header="Import XML" Click="ImportXmlCard_Click" Description="Import a notification's XML data." x:Name="ImportXmlCard" IsClickEnabled="True">
+
+                <toolkit:SettingsCard.HeaderIcon>
+                    <FontIcon Glyph="&#xE8B5;" />
+                </toolkit:SettingsCard.HeaderIcon>
+            </toolkit:SettingsCard>-->
+                    </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>

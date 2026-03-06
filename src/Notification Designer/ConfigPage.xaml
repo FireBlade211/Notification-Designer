@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Notification_Designer.ConfigPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Notification_Designer"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Loaded="Page_Loaded"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+
+    <Page.Resources>
+        <!--  These styles can be referenced to create a consistent SettingsPage layout  -->
+        <!--  Reference SettingsExpander Page in Windows Community Toolkit Gallery for the full sample  -->
+
+        <!--  Spacing between cards  -->
+        <x:Double x:Key="SettingsCardSpacing">4</x:Double>
+
+        <!--  Style (inc. the correct spacing) of a section header  -->
+        <Style
+            x:Key="SettingsSectionHeaderTextBlockStyle"
+            BasedOn="{StaticResource BodyStrongTextBlockStyle}"
+            TargetType="TextBlock">
+            <Style.Setters>
+                <Setter Property="Margin" Value="1,30,0,6" />
+            </Style.Setters>
+        </Style>
+    </Page.Resources>
+    
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="titleBar" VerticalAlignment="Top" SizeChanged="titleBar_SizeChanged">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0" x:Name="LeftPaddingColumn"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="0" x:Name="RightPaddingColumn"/>
+            </Grid.ColumnDefinitions>
+            
+            <Button Style="{StaticResource TitleBarBackButtonStyle}" ToolTipService.ToolTip="Back" Height="{StaticResource NavigationBackButtonHeight}"
+                    Grid.Column="1" x:Name="backButton" Click="backButton_Click"/>
+        </Grid>
+
+        <TextBlock
+            x:Name="PageHeader"
+            Margin="36,36,36,0"
+            Style="{StaticResource TitleTextBlockStyle}"
+            Text="Settings" />
+        <ScrollViewer
+            x:Name="contentSV"
+            Grid.Row="1"
+            Padding="36,0,36,0"
+            IsTabStop="False"
+            UseSystemFocusVisuals="False"
+            VerticalScrollBarVisibility="Auto"
+            VerticalScrollMode="Auto">
+            <StackPanel Spacing="{StaticResource SettingsCardSpacing}">
+                <StackPanel.ChildrenTransitions>
+                    <TransitionCollection>
+                        <EntranceThemeTransition FromVerticalOffset="50" />
+                        <RepositionThemeTransition IsStaggeringEnabled="False" />
+                    </TransitionCollection>
+                </StackPanel.ChildrenTransitions>
+                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Appearance &amp; behavior" />
+                <toolkit:SettingsCard Description="Select which app theme to display" Header="App theme">
+                    <toolkit:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE790;" />
+                    </toolkit:SettingsCard.HeaderIcon>
+                    <ComboBox
+                        x:Name="themeMode"
+                        AutomationProperties.AutomationId="themeModeComboBox"
+                        SelectionChanged="themeMode_SelectionChanged">
+                        <ComboBoxItem Content="Light" Tag="Light" />
+                        <ComboBoxItem Content="Dark" Tag="Dark" />
+                        <ComboBoxItem Content="Use system setting" Tag="Default" />
+                    </ComboBox>
+                </toolkit:SettingsCard>
+
+                <toolkit:SettingsExpander Description="Controls provide audible feedback" Header="Sound">
+                    <toolkit:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xEC4F;" />
+                    </toolkit:SettingsExpander.HeaderIcon>
+                    <ToggleSwitch x:Name="soundToggle" Toggled="soundToggle_Toggled" />
+                    <toolkit:SettingsExpander.Items>
+                        <toolkit:SettingsCard
+                            x:Name="SpatialAudioCard"
+                            Header="Enable Spatial Audio"
+                            IsEnabled="False">
+                            
+                            <ToggleSwitch x:Name="spatialSoundBox" Toggled="spatialSoundBox_Toggled" />
+                        </toolkit:SettingsCard>
+                    </toolkit:SettingsExpander.Items>
+                </toolkit:SettingsExpander>
+
+                <!--  About  -->
+                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="About" />
+                <toolkit:SettingsExpander Description="Copyright © 2026 FireBlade" Header="Notification Designer">
+                    <toolkit:SettingsExpander.HeaderIcon>
+                        <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/logo.png" />
+                    </toolkit:SettingsExpander.HeaderIcon>
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        IsTextSelectionEnabled="True"
+                        Text="{x:Bind local:Globals.Version}" />
+                    <toolkit:SettingsExpander.Items>
+                        <toolkit:SettingsCard
+                            x:Name="toCloneRepoCard"
+                            Click="toCloneRepoCard_Click"
+                            Header="To clone this repository"
+                            IsClickEnabled="True">
+                            <TextBlock
+                                x:Name="gitCloneTextBlock"
+                                FontFamily="Consolas"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                IsTextSelectionEnabled="True"
+                                Text="git clone https://github.com/FireBlade211/Notification-Designer.git" />
+                            <toolkit:SettingsCard.ActionIcon>
+                                <FontIcon Glyph="&#xE8C8;" />
+                            </toolkit:SettingsCard.ActionIcon>
+                        </toolkit:SettingsCard>
+                        <toolkit:SettingsCard
+                            x:Name="bugRequestCard"
+                            Click="bugRequestCard_Click"
+                            Header="File a bug or request new feature"
+                            IsClickEnabled="True">
+                            <toolkit:SettingsCard.ActionIcon>
+                                <FontIcon Glyph="&#xE8A7;" />
+                            </toolkit:SettingsCard.ActionIcon>
+                        </toolkit:SettingsCard>
+                        <toolkit:SettingsCard
+                            HorizontalContentAlignment="Left"
+                            ContentAlignment="Vertical"
+                            Header="Dependencies &amp; references">
+                            <StackPanel Margin="-12,0,0,0" Orientation="Vertical">
+                                <HyperlinkButton Content="{x:Bind local:Globals.WinAppSdkRuntimeDetails}" NavigateUri="https://aka.ms/windowsappsdk" />
+                                <HyperlinkButton Content="WinUI 3" NavigateUri="https://aka.ms/winui" />
+                                <HyperlinkButton Content="Windows Community Toolkit" NavigateUri="https://aka.ms/toolkit/windows" />
+                                <HyperlinkButton Content="Microsoft Notification Toolkit"
+                                                 NavigateUri="https://www.nuget.org/packages/Microsoft.Toolkit.Uwp.Notifications"/>
+                            </StackPanel>
+                        </toolkit:SettingsCard>
+                        <toolkit:SettingsCard>
+                            <toolkit:SettingsCard.Header>
+                                <x:String>
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+                                </x:String>
+                            </toolkit:SettingsCard.Header>
+
+                            <Button Style="{StaticResource AccentButtonStyle}" Content="View license">
+                                <Button.Flyout>
+                                    <Flyout>
+                                        <TextBlock TextWrapping="WrapWholeWords" IsTextSelectionEnabled="True">
+                                            <TextBlock.Text>
+                                                <x:String xml:space="preserve">MIT License
+
+Copyright (c) 2026 FireBlade
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+                                                </x:String>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </Flyout>
+                                </Button.Flyout>
+                            </Button>
+                        </toolkit:SettingsCard>
+                    </toolkit:SettingsExpander.Items>
+                </toolkit:SettingsExpander>
+            </StackPanel>
+        </ScrollViewer>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="WideLayout">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="{StaticResource Breakpoint640Plus}" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="NarrowLayout">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="contentSV.Padding" Value="16,0" />
+                        <Setter Target="PageHeader.Margin" Value="16,48,0,0" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+    </Grid>
+</Page>
