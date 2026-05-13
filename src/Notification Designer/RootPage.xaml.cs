@@ -24,7 +24,7 @@ using Windows.System;
 using Notification_Designer.Helpers;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Windowing;
-using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media.Animation;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -1843,7 +1843,7 @@ namespace Notification_Designer
             var wnd = MainWindow.Instance;
             if (wnd == null) return;
 
-            wnd.mainFrame.Navigate(typeof(ConfigPage));
+            wnd.mainFrame.Navigate(typeof(ConfigPage), null, new DrillInNavigationTransitionInfo());
         }
     }
 

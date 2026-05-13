@@ -41,8 +41,9 @@
                 <ColumnDefinition Width="0" x:Name="RightPaddingColumn"/>
             </Grid.ColumnDefinitions>
             
-            <Button Style="{StaticResource TitleBarBackButtonStyle}" ToolTipService.ToolTip="Back" Height="{StaticResource NavigationBackButtonHeight}"
-                    Grid.Column="1" x:Name="backButton" Click="backButton_Click"/>
+            <Button Style="{StaticResource TitleBarBackButtonStyle}" ToolTipService.ToolTip="Back"
+                    Height="{StaticResource NavigationBackButtonHeight}" Grid.Column="1" x:Name="backButton"
+                    Click="backButton_Click" ElementSoundMode="Off"/>
         </Grid>
 
         <TextBlock

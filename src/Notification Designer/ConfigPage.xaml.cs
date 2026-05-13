@@ -11,6 +11,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Graphics;
 using Windows.System;
+using Microsoft.UI.Xaml.Media.Animation;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -104,13 +105,18 @@ namespace Notification_Designer
 
         private void backButton_Click(object sender, RoutedEventArgs e)
         {
+            ElementSoundPlayer.Play(ElementSoundKind.GoBack);
+
             var wnd = MainWindow.Instance;
             if (wnd == null) return;
 
             if (wnd.AppWindow.Presenter.Kind != AppWindowPresenterKind.FullScreen)
                 wnd.AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Standard;
 
-            wnd.mainFrame.Navigate(typeof(RootPage));
+            wnd.mainFrame.Navigate(typeof(RootPage), null, new SlideNavigationTransitionInfo
+            {
+                Effect = SlideNavigationTransitionEffect.FromBottom
+            });
         }
 
         private void themeMode_SelectionChanged(object sender, RoutedEventArgs e)
