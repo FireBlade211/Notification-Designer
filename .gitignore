@@ -419,3 +419,6 @@ FodyWeavers.xsd
 
 # Images
 *.psd
+
+# Windows stuff
+desktop.ini
