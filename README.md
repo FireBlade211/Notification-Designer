@@ -4,6 +4,9 @@
 
 <h1 align="center">Notification Designer</h1>
 
+> [!WARNING]
+> **Notification Designer** has been superseded by [Notification Editor](FireBlade211/Notification-Editor). You can still use **Notification Designer**, but consider checking out [Notification Editor](FireBlade211/Notification-Editor).
+
 An app that allows you to generate Windows toast notifications through UI without manual XML editing.
 
 ## Screenshot
